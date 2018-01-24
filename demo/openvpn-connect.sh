@@ -15,6 +15,6 @@ fi
 sudo openvpn \
   $CLIENT_EXTRA_ARGS \
   --remote $(minikube ip) $( \
-      kubectl get svc kubevpn -o=jsonpath='{.spec.ports[?(@.port==1194)].nodePort}' \
+      kubectl get svc k8sovpn -o=jsonpath='{.spec.ports[?(@.port==1194)].nodePort}' \
     ) \
   --config jean-luc.picard.ovpn

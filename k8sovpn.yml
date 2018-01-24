@@ -1,21 +1,21 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: kubevpn
+  name: k8sovpn
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: kubevpn
+        name: k8sovpn
     spec:
       volumes:
-        - name: kubevpn-etc-openvpn-secret
+        - name: k8sovpn-etc-openvpn-secret
           secret:
-            secretName: kubevpn
+            secretName: k8sovpn
             defaultMode: 0400
       containers:
-        - name: kubevpn
+        - name: k8sovpn
           image: shyiko/openvpn:2.4.0_easyrsa-3.0.3
           securityContext:
             capabilities:
@@ -96,5 +96,5 @@ spec:
               containerPort: 1194
               protocol: UDP
           volumeMounts:
-            - name: kubevpn-etc-openvpn-secret
+            - name: k8sovpn-etc-openvpn-secret
               mountPath: /etc/openvpn/secret

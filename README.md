@@ -1,4 +1,4 @@
-# kubevpn
+# k8sovpn
 
 [OpenVPN](https://openvpn.net/index.php/open-source/documentation/howto.html) for Kubernetes.  
 The primary goal is "to see the world the way pods see it".  
@@ -48,7 +48,7 @@ docker run -v $(pwd):/workdir -w /workdir --rm -it \
   '
 
 # create a secret containing everything but CA private key (keep it safe!)
-kubectl create secret generic kubevpn \
+kubectl create secret generic k8sovpn \
   --from-file=pki/ca.crt \
   --from-file=pki/crl.pem \
   --from-file=pki/dh.pem \
@@ -57,8 +57,8 @@ kubectl create secret generic kubevpn \
   --from-file=ta.key
 
 # deploy OpenVPN server
-kubectl apply -f kubevpn.yml
-kubectl expose -f kubevpn.yml --port=1194
+kubectl apply -f k8sovpn.yml
+kubectl expose -f k8sovpn.yml --port=1194
 ```
 
 That's it.  
@@ -121,7 +121,7 @@ docker run -v $(pwd):/workdir -w /workdir --rm -it \
 
 # propagate updated CRL to the OpenVPN server
 
-kubectl create secret generic kubevpn \
+kubectl create secret generic k8sovpn \
   --from-file=pki/ca.crt \
   --from-file=pki/crl.pem \
   --from-file=pki/dh.pem \
@@ -129,13 +129,13 @@ kubectl create secret generic kubevpn \
   --from-file=pki/private/server.key \
   --from-file=ta.key
 
-kubectl replace --force -f kubevpn.yml
+kubectl replace --force -f k8sovpn.yml
 ```
 
 ## DEMO (aka Testing locally via Minikube)
 
 ```sh
-git clone https://github.com/shyiko/kubevpn
+git clone https://github.com/shyiko/k8sovpn
 cd demo/
 
 minikube start
@@ -145,20 +145,20 @@ kubectl expose deployment nginx --port=80
 
 # all the certs/keys included in demo/ are for demo purposes only
 # see "Usage" on how to generate your own
-kubectl create secret generic kubevpn \
+kubectl create secret generic k8sovpn \
   --from-file=pki/ca.crt \
   --from-file=pki/crl.pem \
   --from-file=pki/dh.pem \
   --from-file=pki/issued/server.crt \
   --from-file=pki/private/server.key \
   --from-file=ta.key
-kubectl apply -f ../kubevpn.yml
-kubectl expose -f ../kubevpn.yml --port=1194 --type=NodePort
+kubectl apply -f ../k8sovpn.yml
+kubectl expose -f ../k8sovpn.yml --port=1194 --type=NodePort
 
 # connect * (see footnote)
 sudo openvpn \
   --remote $(minikube ip) $( \
-      kubectl get svc kubevpn -o=jsonpath='{.spec.ports[?(@.port==1194)].nodePort}' \
+      kubectl get svc k8sovpn -o=jsonpath='{.spec.ports[?(@.port==1194)].nodePort}' \
     ) \
   --config jean-luc.picard.ovpn
 
