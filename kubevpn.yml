@@ -1,0 +1,100 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: kubevpn
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: kubevpn
+    spec:
+      volumes:
+        - name: kubevpn-etc-openvpn-secret
+          secret:
+            secretName: kubevpn
+            defaultMode: 0400
+      containers:
+        - name: kubevpn
+          image: shyiko/openvpn:2.4.0_easyrsa-3.0.3
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          env:
+            # net/subnet allocated for openvpn clients
+            - name: OVPN_NET
+              value: 10.240.0.0
+            - name: OVPN_SUBNET
+              value: 255.255.0.0
+            # udp or tcp
+            - name: OVPN_PROTOCOL
+              value: udp
+            - name: OVPN_DHCP_OPTION_DOMAIN
+              value: svc.cluster.local cluster.local
+          command:
+            - sh
+            - -c
+            - -e
+            - |-
+              iptables -t nat -A POSTROUTING -s ${OVPN_NET}/${OVPN_SUBNET} -o eth0 -j MASQUERADE
+              mkdir -p /dev/net
+              if [ ! -c /dev/net/tun ]; then
+                  mknod /dev/net/tun c 10 200
+              fi
+              OVPN_DHCP_OPTION_DNS=$(cat /etc/resolv.conf | grep -v '^#' | grep nameserver | awk '{print $2}')
+              cat >/etc/openvpn/openvpn.conf <<EOF
+              server ${OVPN_NET} ${OVPN_SUBNET}
+              # log level
+              verb 3
+
+              ca /etc/openvpn/secret/ca.crt
+              crl-verify /etc/openvpn/secret/crl.pem
+              dh /etc/openvpn/secret/dh.pem
+              cert /etc/openvpn/secret/server.crt
+              key /etc/openvpn/secret/server.key
+              tls-auth /etc/openvpn/secret/ta.key 0
+
+              # openvpn --show-digests
+              # NOTE: client must specify the same value (if uncommented)
+              # auth SHA256
+              auth SHA1
+
+              # comment line below if you (absolutely) need compatibility with older versions of client (>=2.3.3)
+              # (not recommended)
+              tls-version-min 1.2
+              # openvpn --show-tls (multiple values can be separated with :)
+              tls-cipher TLS-DHE-RSA-WITH-AES-128-GCM-SHA256
+              # openvpn --show-ciphers
+              # NOTE: client must specify the same value (default BF-CBC)
+              cipher AES-128-GCM
+
+              # https://community.openvpn.net/openvpn/wiki/topology
+              topology subnet
+
+              # NOTE: client must specify 1
+              key-direction 0
+              keepalive 10 60
+              persist-key
+              persist-tun
+
+              proto ${OVPN_PROTOCOL}
+              port 1194
+              dev tun
+              status /tmp/openvpn-status.log
+
+              user nobody
+              group nogroup
+
+              push "route 10.0.0.0 255.0.0.0"
+              push "dhcp-option DNS ${OVPN_DHCP_OPTION_DNS}"
+              $(for v in ${OVPN_DHCP_OPTION_DOMAIN}; do printf "push \"dhcp-option DOMAIN ${v}\";\n"; done)
+              EOF
+              exec openvpn --config /etc/openvpn/openvpn.conf
+          ports:
+            - name: openvpn
+              containerPort: 1194
+              protocol: UDP
+          volumeMounts:
+            - name: kubevpn-etc-openvpn-secret
+              mountPath: /etc/openvpn/secret
