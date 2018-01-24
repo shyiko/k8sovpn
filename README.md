@@ -115,6 +115,7 @@ docker run -v $(pwd):/workdir -w /workdir --rm -it \
   -e CLIENT_NAME=<client_name> \
   shyiko/openvpn:2.4.0_easyrsa-3.0.3 \
   bash -c '
+  export EASYRSA_PKI=$(pwd)/pki
   printf "yes\n" | easyrsa revoke $CLIENT_NAME
   easyrsa gen-crl
   '
