@@ -88,7 +88,7 @@ spec:
 
               push "route 10.0.0.0 255.0.0.0"
               push "dhcp-option DNS ${OVPN_DHCP_OPTION_DNS}"
-              $(for v in ${OVPN_DHCP_OPTION_DOMAIN}; do printf "push \"dhcp-option DOMAIN ${v}\";\n"; done)
+              $(for v in ${OVPN_DHCP_OPTION_DOMAIN}; do printf "push \"dhcp-option DOMAIN-SEARCH ${v}\";\n"; done)
               EOF
               exec openvpn --config /etc/openvpn/openvpn.conf
           ports:
