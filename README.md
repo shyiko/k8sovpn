@@ -94,7 +94,6 @@ cipher AES-128-GCM
 <ca>\n$(cat pki/ca.crt)\n</ca>
 <key>\n$(cat pki/private/$CLIENT_NAME.key)\n</key>
 <cert>\n$(cat pki/issued/$CLIENT_NAME.crt)\n</cert>
-<dh>\n$(cat pki/dh.pem)\n</dh>
 remote-cert-tls server
 <tls-auth>\n$(cat ta.key)\n</tls-auth>
 key-direction 1
@@ -105,8 +104,8 @@ key-direction 1
 sudo openvpn <client_name>.ovpn
 ```
 
-> NOTE: .ovpn generated above has certs, client/tls-auth keys and DH params embedded 
-(which means only .ovpn file needs to be distributed to the client (no need for separate ca.crt, dh.pem or ta.key)).
+> NOTE: .ovpn generated above has certs and keys embedded 
+(which means only .ovpn file needs to be distributed to the client (no need for separate ca.crt or ta.key)).
 
 To revoke client certificate (in case you ever need this):
 

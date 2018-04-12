@@ -41,7 +41,6 @@ cipher AES-128-GCM
 <ca>\n$(cat pki/ca.crt)\n</ca>
 <key>\n$(cat pki/private/$CLIENT_NAME.key)\n</key>
 <cert>\n$(cat pki/issued/$CLIENT_NAME.crt)\n</cert>
-<dh>\n$(cat pki/dh.pem)\n</dh>
 remote-cert-tls server
 <tls-auth>\n$(cat ta.key)\n</tls-auth>
 key-direction 1
